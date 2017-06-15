@@ -1,0 +1,1 @@
+D:\docs\unity_learn\holo-share-self\WindowsStoreApp\holo-share-self\holo-share-self.csproj;x86

@@ -1,0 +1,28 @@
+﻿生成启动时间为 2017/6/6 20:58:48。
+     1>项目“C:\Users\pc\Desktop\SDK\Samples C++\Start IPC2 Win32\Start IPC2 Win32 VS2010\Start IPC2 Win32.vcxproj”在节点 2 上(build 个目标)。
+     1>InitializeBuildStatus:
+         正在创建“Release\Win32\Start IPC2 Win32.unsuccessfulbuild”，因为已指定“AlwaysCreate”。
+       ClCompile:
+         D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\..\..\Lib /Zi /nologo /W3 /WX- /O2 /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yc"StdAfx.h" /Fp"Release\Win32\Start IPC2 Win32.pch" /Fo"Release\Win32\\" /Fd"Release\Win32\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\stdafx.cpp
+         stdafx.cpp
+         D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I..\..\..\Lib /Zi /nologo /W3 /WX- /O2 /Oy- /GL /D WIN32 /D NDEBUG /D _WINDOWS /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /fp:precise /Zc:wchar_t /Zc:forScope /Yu"StdAfx.h" /Fp"Release\Win32\Start IPC2 Win32.pch" /Fo"Release\Win32\\" /Fd"Release\Win32\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt ..\mainWin32.cpp
+         mainWin32.cpp
+       ResourceCompile:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _UNICODE /D UNICODE /l"0x0409" /nologo /fo"Release\Win32\Start IPC2 Win32.res" "..\Start IPC2 Win32.rc" 
+       Link:
+         D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"Release\Win32\Start IPC2 Win32.exe" /INCREMENTAL:NO /NOLOGO Gdiplus.lib ..\..\..\Lib\v100\ImagerIPC2.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Release\Win32\Start IPC2 Win32.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"C:\Users\pc\Desktop\SDK\Samples C++\Start IPC2 Win32\Start IPC2 Win32 VS2010\Release\Win32\Start IPC2 Win32.pdb" /SUBSYSTEM:WINDOWS /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE:NO /IMPLIB:"Release\Win32\Start IPC2 Win32.lib" /MACHINE:X86 "Release\Win32\Start IPC2 Win32.res"
+         Release\Win32\mainWin32.obj
+         Release\Win32\stdafx.obj
+         正在生成代码
+         已完成代码的生成
+         Start IPC2 Win32.vcxproj -> C:\Users\pc\Desktop\SDK\Samples C++\Start IPC2 Win32\Start IPC2 Win32 VS2010\Release\Win32\Start IPC2 Win32.exe
+       Manifest:
+         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"Release\Win32\Start IPC2 Win32.exe;#1" /manifest "Release\Win32\Start IPC2 Win32.exe.intermediate.manifest"
+       FinalizeBuildStatus:
+         正在删除文件“Release\Win32\Start IPC2 Win32.unsuccessfulbuild”。
+         正在对“Release\Win32\Start IPC2 Win32.lastbuildstate”执行 Touch 任务。
+     1>已完成生成项目“C:\Users\pc\Desktop\SDK\Samples C++\Start IPC2 Win32\Start IPC2 Win32 VS2010\Start IPC2 Win32.vcxproj”(build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:01.56
