@@ -22,6 +22,9 @@ public class SendIRImage : MonoBehaviour
     string ImageDir = @"IRCamera\output.png";
 
     Texture2D texForSend;
+    int width = 500;
+    int height = 0;
+    Color[] lineImgFromTex;
 
     bool haveNewMessage = false;
 
@@ -34,11 +37,16 @@ public class SendIRImage : MonoBehaviour
     byte[] imageData;
     private bool getNewImage;
 
+
+
+    
+    
+
     private void Start()
     {
         mat = this.GetComponent<Renderer>().material;
         tex = new Texture2D(1, 1);
-
+        scanIndex = 0;
         //customMessage = CustomMessages240.Instance;
         myMessage = CustomMessagesIRImage.Instance;
     }
@@ -58,26 +66,63 @@ public class SendIRImage : MonoBehaviour
         Debug.Log("更新了material");
     }
 
+    private void InitImage() {
+        width = tex.width;
+        height = tex.height;
+        Color[] lineImgFromTex;
+        texForSend = new Texture2D(width, 20);
+
+    }
+
     void Update()
     {
+
+        
+
+
         if (Time.time - lastTime > timeGap)
+        //if (true)
         {
             lastTime = Time.time;
 
             GetImageFromDir();
 
+            
+
             if (getNewImage)
             {
+                DebugShowImage();
                 getNewImage = false;
 
+                InitImage();
                 //myMessage.SendIRImageByString(imageData);
-                myMessage.SendIRImageByArray(imageData);
-                myMessage.SendIRImageByLinescan(imageData , scanIndex);
+                //myMessage.SendIRImageByArray(imageData);
+
                 //myMessage.SendIRImage(imageData);
 
-                DebugShowImage();
             }
             Debug.Log("Just sent a image");
+
+            
         }
+
+        if (scanIndex < tex.height - 20)
+        {
+            
+
+            lineImgFromTex = tex.GetPixels(0, scanIndex, width, 20);
+            texForSend.SetPixels(0, 0, width, 20, lineImgFromTex);
+            texForSend.Apply();
+            byte[] lineImg = texForSend.EncodeToPNG();
+            myMessage.SendIRImageByLinescan(lineImg, scanIndex);
+
+            scanIndex += 1;
+
+        }
+        else
+        {
+            scanIndex = 0;
+        }
+
     }
 }
