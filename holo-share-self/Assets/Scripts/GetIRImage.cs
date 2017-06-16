@@ -24,6 +24,9 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
     CustomMessages240 customMessage;
 
     byte[] imageData;
+    Texture2D lineTex;
+    Color[] lineColors;
+    int scanIndex = 0;
 
     TextMesh myTextMesh;
     public GameObject debugGOJ;
@@ -35,19 +38,37 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
     float textureJiangeTime = 1f / 10f;
     float textureLastTime = 0f;
 
+    float screenX = 0;
+    float screenY = 0;
+
+    
+    Vector3 moveVec = new Vector3(0, -1.16f / 120, 0);
+    Vector3 initPos = new Vector3(0, 0.58f, 5);
+    
+    
+
+
+
+
+
     private void Start()
     {
         myTextMesh = debugGOJ.GetComponent<TextMesh>();
 
         mat = this.GetComponent<Renderer>().material;
         tex = new Texture2D(256, 256);
-
+        lineTex = new Texture2D(256, 20);
+        lineColors = new Color[5121];
         //customMessage = CustomMessages240.Instance;
         myMessage = CustomMessagesIRImage.Instance;
 
         // 增加一个Callback，触发这个的时候就触发下面的函数
         //customMessage.MessageHandlers[CustomMessages240.CustomMessageID.CubePostion] = OnCubePositionReceived;
         myMessage.MessageHandlers[CustomMessagesIRImage.CustomMessageID.IRImage] = OnIRImageReceived;
+
+        screenX = GameObject.Find("Plane").transform.localPosition.x;
+        screenY = GameObject.Find("Plane").transform.localPosition.y;
+        
     }
 
     private void OnIRImageReceived(NetworkInMessage msg)
@@ -58,7 +79,7 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
         //imageData = CustomMessagesIRImage.ReadIRImageByString(msg);
         //imageData = CustomMessagesIRImage.ReadIRImageByArray(msg);
         imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
-        int scanIndex = CustomMessagesIRImage.scanIndex;
+        scanIndex = CustomMessagesIRImage.scanIndex;
         Debug.Log("scanIndex is " + scanIndex);
         haveNewMessage = true;
         jiangeTime = Time.time - countStartTime;
@@ -90,9 +111,10 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
         {
             haveNewMessage = false;
             myTextMesh.text = (counter++).ToString();
+            
         }
-
         UpdataTexture();
+
     }
 
     /// <summary>
@@ -104,12 +126,43 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
         {
             textureLastTime = Time.time;
             LoadDataToTexture();
+            //LoadLinescanDataToTexture();
         }
     }
 
     private void LoadDataToTexture()
     {
         tex.LoadImage(imageData);
+
+        Debug.Log("image loaded");
+
+        tex.Apply();
+        mat.SetTexture("_MainTex", tex);
+        
+
+        
+            Vector3 calculatedPos = new Vector3(0, 0.60f + scanIndex*(-1.16f / 94), 5);
+            this.gameObject.transform.position = calculatedPos;
+
+
+
+            //this.gameObject.transform.Translate(moveVec, Space.World);
+        
+        
+    }
+
+    private void LoadLinescanDataToTexture() {
+        lineTex.LoadImage(imageData);
+        tex.LoadImage(imageData);
+        tex.Apply();
+        lineTex.Apply();
+        lineColors = lineTex.GetPixels(0, 0, lineTex.width, 20);
+
+        
+
+        
+
+        tex.SetPixels(0, scanIndex, tex.width, 20, lineColors);
         tex.Apply();
         mat.SetTexture("_MainTex", tex);
     }
