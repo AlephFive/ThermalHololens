@@ -4,6 +4,9 @@
 using System;
 using HoloToolkit.Sharing;
 using HoloToolkit.Unity.InputModule;
+using U3D.Threading.Tasks;
+
+
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -35,7 +38,7 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
 
     int counter = 0;
 
-    float textureJiangeTime = 1f / 10f;
+    float textureJiangeTime = 1f / 30f;
     float textureLastTime = 0f;
 
     float screenX = 0;
@@ -44,8 +47,10 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
     
     Vector3 moveVec = new Vector3(0, -1.16f / 120, 0);
     Vector3 initPos = new Vector3(0, 0.58f, 5);
-    
-    
+
+
+
+
 
 
 
@@ -78,7 +83,16 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
         //imageData = CustomMessagesIRImage.ReadIRImage(msg);
         //imageData = CustomMessagesIRImage.ReadIRImageByString(msg);
         //imageData = CustomMessagesIRImage.ReadIRImageByArray(msg);
-        imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
+
+        //imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
+
+#if HASTASKS
+    imageData = CustomMessagesIRImage.ReadIRImageByLinescanAsync(msg);
+
+#else
+    imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
+#endif
+
         scanIndex = CustomMessagesIRImage.scanIndex;
         Debug.Log("scanIndex is " + scanIndex);
         haveNewMessage = true;
@@ -111,9 +125,9 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
         {
             haveNewMessage = false;
             myTextMesh.text = (counter++).ToString();
-            
+            UpdataTexture();
         }
-        UpdataTexture();
+        
 
     }
 
@@ -133,6 +147,7 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
     private void LoadDataToTexture()
     {
         tex.LoadImage(imageData);
+        //tex.LoadRawTextureData(imageData);
 
         Debug.Log("image loaded");
 
@@ -156,14 +171,15 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
         tex.LoadImage(imageData);
         tex.Apply();
         lineTex.Apply();
-        lineColors = lineTex.GetPixels(0, 0, lineTex.width, 20);
-
+        lineColors = lineTex.GetPixels(0, 0, lineTex.width, 5);
         
 
         
 
-        tex.SetPixels(0, scanIndex, tex.width, 20, lineColors);
+        tex.SetPixels(0, scanIndex, tex.width, 5, lineColors);
         tex.Apply();
         mat.SetTexture("_MainTex", tex);
     }
 }
+
+

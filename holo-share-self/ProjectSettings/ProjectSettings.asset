@@ -133,7 +133,7 @@ PlayerSettings:
       depthFormat: 0
       useSustainedPerformanceMode: 0
     hololens:
-      depthFormat: 1
+      depthFormat: 0
   protectGraphicsMemory: 0
   useHDRDisplay: 0
   applicationIdentifier: {}
@@ -150,7 +150,7 @@ PlayerSettings:
   ForceSDCardPermission: 0
   CreateWallpaper: 0
   APKExpansionFiles: 0
-  keepLoadedShadersAlive: 0
+  keepLoadedShadersAlive: 1
   StripUnusedMeshComponents: 0
   VertexChannelCompressionMask:
     serializedVersion: 2

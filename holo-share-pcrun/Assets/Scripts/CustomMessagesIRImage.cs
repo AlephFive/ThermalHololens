@@ -200,7 +200,8 @@ public class CustomMessagesIRImage : Singleton<CustomMessagesIRImage>
 
             //send length data
             msg.Write(imageBytes.Length);
-            
+
+            Debug.Log("sent bytes: " + imageBytes.Length);
             //send image
             msg.WriteArray(imageBytes, Convert.ToUInt32(imageBytes.Length));
 

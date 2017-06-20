@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using HoloToolkit.Sharing;
 using HoloToolkit.Unity;
+
+
+
 using System;
 
 public class CustomMessagesIRImage : Singleton<CustomMessagesIRImage>
@@ -245,8 +248,8 @@ public class CustomMessagesIRImage : Singleton<CustomMessagesIRImage>
         length = msg.ReadInt32();
 
         tempImage = new byte[length];
-
-        msg.ReadArray(tempImage, Convert.ToUInt32(length));
+        
+        msg.ReadArray(tempImage, Convert.ToUInt16(length));
 
         return tempImage;
     }
@@ -257,4 +260,21 @@ public class CustomMessagesIRImage : Singleton<CustomMessagesIRImage>
 
         return new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
     }
+
+
+
+#if HASTASKS
+    private static async Task<byte[]> ReadIRImageByLinescanAsync(NetworkInMessage msg) {
+
+        
+        byte[] tempImage = await ReadIRImageByLinescan(msg);
+        
+        return tempImage;
+    }
+
+    
+#endif
+
 }
+
+
