@@ -4,6 +4,8 @@
 using System;
 using HoloToolkit.Sharing;
 using HoloToolkit.Unity.InputModule;
+
+using System.Runtime.InteropServices;
 using UnityEngine;
 using System.IO;
 
@@ -12,7 +14,7 @@ using System.IO;
 /// </summary>
 public class SendIRImage : MonoBehaviour
 {
-    float timeGap = 1f / 30f;
+    float timeGap = 0.35f;
     float lastTime;
     float lastTime2;
 
@@ -21,6 +23,8 @@ public class SendIRImage : MonoBehaviour
     int numImagesSent = 0;
 
     string ImageDir = @"IRCamera\output.png";
+    
+    string TempDir = @"IRCamera\tempoutput.txt";
     //string ImageDir = @"IRCamera\tinypic.png";
 
     Texture2D texForSend;
@@ -42,9 +46,33 @@ public class SendIRImage : MonoBehaviour
     private bool getNewImage;
 
 
+    float temperature = 0;
 
+
+
+
+    /// <summary>
+    /// function enable/disable
+    /// </summary>
+    bool enableAlternateOpacity = true;
+    bool enableThreshholdImage = true;
+    bool enableScanline = false;
+    bool enableOnlySendTemp = false;
     
-    
+
+
+    // all ipc stuff
+
+
+
+
+
+
+
+
+
+
+
 
     private void Start()
     {
@@ -53,15 +81,24 @@ public class SendIRImage : MonoBehaviour
         scanIndex = 0;
         //customMessage = CustomMessages240.Instance;
         myMessage = CustomMessagesIRImage.Instance;
+
+
+       
+
+
     }
 
     private void GetImageFromDir()
     {
         imageData = File.ReadAllBytes(ImageDir);
         //Debug.Log("the size of imageData is " + imageData.Length);
+        string tempString = File.ReadAllText(TempDir);
+        temperature = float.Parse(tempString);
+        Debug.Log("temperature is: " + temperature);
+
         getNewImage = true;
     }
-
+    
     private void DebugShowImage()
     {
         tex.LoadImage(imageData);
@@ -85,7 +122,7 @@ public class SendIRImage : MonoBehaviour
         {
             for (int j = 0; j < tex.width; j++)
             {
-                if (tex.GetPixel(j, i).r < 0.5) {
+                if ((tex.GetPixel(j, i).r + tex.GetPixel(j, i).g + tex.GetPixel(j, i).b)/3 < 0.5) {
                     tex.SetPixel(j, i, empty);
                 }
             }
@@ -94,12 +131,13 @@ public class SendIRImage : MonoBehaviour
         Debug.Log("Thresholded image");
     }
 
-    private void AlternateOpacity() {
+    private void AlternateOpacity()
+    {
         for (int i = 0; i < tex.height; i++)
         {
             for (int j = 0; j < tex.width; j++)
             {
-                tex.SetPixel(j, i, new Color(tex.GetPixel(j, i).r, tex.GetPixel(j, i).g, tex.GetPixel(j, i).b, (Mathf.Sin(Time.time)/2) + 0.5f));
+                tex.SetPixel(j, i, new Color(tex.GetPixel(j, i).r, tex.GetPixel(j, i).g, tex.GetPixel(j, i).b, (Mathf.Sin(Time.time) / 2) + 0.5f));
             }
         }
         tex.Apply();
@@ -133,8 +171,17 @@ public class SendIRImage : MonoBehaviour
             {
                 
                 DebugShowImage();
-                //ThreshholdImage();
-                AlternateOpacity();
+                
+
+
+                if (enableAlternateOpacity) {
+                    AlternateOpacity();
+                }
+
+                if (enableThreshholdImage) {
+                    ThreshholdImage();
+                }
+                
 
                 mat.SetTexture("_MainTex", tex);
 
@@ -148,35 +195,57 @@ public class SendIRImage : MonoBehaviour
                 numImagesSent++;
             }
             //Debug.Log("Just sent a image");
-            
 
-            
+            if (enableOnlySendTemp)
+            {
+                myMessage.SendTempTarget(temperature);
+            }
+            else if (enableScanline)
+            {
+                if (scanIndex < tex.height - 20)
+                {
 
-            
+
+                    lineImgFromTex = tex.GetPixels(0, scanIndex, width, 20);
+
+                    texForSend.SetPixels(0, 0, width, 20, lineImgFromTex);
+                    texForSend.Apply();
+                    texForSendAfterCompression.LoadRawTextureData(texForSend.GetRawTextureData());
+                    texForSendAfterCompression.Compress(false);
+                    texForSendAfterCompression.Apply();
+                    //byte[] lineImg = texForSendAfterCompression.GetRawTextureData();
+                    byte[] lineImg = texForSend.EncodeToPNG();
+                    myMessage.SendIRImageByLinescan(lineImg, scanIndex);
+                    Debug.Log("sent packet size (in bytes): " + lineImg.Length + " scanIndex is: " + scanIndex);
+                    scanIndex += 1;
+
+                }
+                else
+                {
+                    scanIndex = 0;
+                }
+            }
+            else
+            {
+                byte[] imgData = tex.EncodeToPNG();
+                //myMessage.SendIRImageByArray(imgData);
+                myMessage.SendTempTargetWithImage(imgData, temperature);
+                Debug.Log("sent packet size (in bytes): " + imgData.Length);
+            }
+
+
+
         }
 
-        if (scanIndex < tex.height - 20)
-        {
-            
+        
 
-            lineImgFromTex = tex.GetPixels(0, scanIndex, width, 20);
-            
-            texForSend.SetPixels(0, 0, width, 20, lineImgFromTex);
-            texForSend.Apply();
-            texForSendAfterCompression.LoadRawTextureData(texForSend.GetRawTextureData());
-            texForSendAfterCompression.Compress(false);
-            texForSendAfterCompression.Apply();
-            //byte[] lineImg = texForSendAfterCompression.GetRawTextureData();
-            byte[] lineImg = texForSend.EncodeToPNG();
-            myMessage.SendIRImageByLinescan(lineImg, scanIndex);
-
-            scanIndex += 1;
-
-        }
-        else
-        {
-            scanIndex = 0;
-        }
+        
 
     }
+
+
+
+
+
+
 }

@@ -4,7 +4,7 @@
 using System;
 using HoloToolkit.Sharing;
 using HoloToolkit.Unity.InputModule;
-using U3D.Threading.Tasks;
+
 
 
 using UnityEngine;
@@ -32,7 +32,9 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
     int scanIndex = 0;
 
     TextMesh myTextMesh;
+    TextMesh targetTextMesh;
     public GameObject debugGOJ;
+    public GameObject oTarget;
     float jiangeTime;
     float countStartTime;
 
@@ -49,9 +51,10 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
     Vector3 initPos = new Vector3(0, 0.58f, 5);
 
 
+    float temperature = 0;
 
-
-
+    bool onlyGetTemperature = false;
+    bool enableLinescan = false;
 
 
 
@@ -59,6 +62,7 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
     private void Start()
     {
         myTextMesh = debugGOJ.GetComponent<TextMesh>();
+        targetTextMesh = oTarget.GetComponent<TextMesh>();
 
         mat = this.GetComponent<Renderer>().material;
         tex = new Texture2D(256, 256);
@@ -71,35 +75,82 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
         //customMessage.MessageHandlers[CustomMessages240.CustomMessageID.CubePostion] = OnCubePositionReceived;
         myMessage.MessageHandlers[CustomMessagesIRImage.CustomMessageID.IRImage] = OnIRImageReceived;
 
-        screenX = GameObject.Find("Plane").transform.localPosition.x;
-        screenY = GameObject.Find("Plane").transform.localPosition.y;
+        if (onlyGetTemperature)
+        {
+            this.gameObject.transform.localScale = new Vector3(0f, 0f, 0f);
+            myTextMesh.color = new Color(1f, 1f, 1f);
+            myTextMesh.text = "Initialising TempOnly Mode";
+        }
+        else if (enableLinescan)
+        {
+            this.gameObject.transform.localScale = new Vector3(0.2f, 1f, 0.02500017f);
+            myTextMesh.color = new Color(1f, 1f, 1f);
+            myTextMesh.text = "Initialising Linescan Mode";
+            
+        }
+        else {
+            this.gameObject.transform.localPosition = new Vector3(0f, 0f, 5f);
+            this.gameObject.transform.localScale = new Vector3(0.2f, 1f, 0.1500001f);
+            myTextMesh.color = new Color(1f, 1f, 1f);
+            myTextMesh.text = "Initialising Normal Mode";
+        }
         
+
     }
 
     private void OnIRImageReceived(NetworkInMessage msg)
     {
         countStartTime = Time.time;
 
-        //imageData = CustomMessagesIRImage.ReadIRImage(msg);
-        //imageData = CustomMessagesIRImage.ReadIRImageByString(msg);
-        //imageData = CustomMessagesIRImage.ReadIRImageByArray(msg);
+        
 
-        //imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
 
-#if HASTASKS
-    imageData = CustomMessagesIRImage.ReadIRImageByLinescanAsync(msg);
 
-#else
-    imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
-#endif
+        if (onlyGetTemperature)
+        {
+            temperature = CustomMessagesIRImage.ReadTemperature(msg);
+        }
+        else if (enableLinescan)
+        {
+            imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
+            scanIndex = CustomMessagesIRImage.scanIndex;
+        }
+        else
+        {
+            imageData = CustomMessagesIRImage.ReadIRImageAndTemperature(msg);
+            temperature = CustomMessagesIRImage.temperature;
+        }
+            //imageData = CustomMessagesIRImage.ReadIRImage(msg);
+            //imageData = CustomMessagesIRImage.ReadIRImageByString(msg);
+            //imageData = CustomMessagesIRImage.ReadIRImageByArray(msg);
 
-        scanIndex = CustomMessagesIRImage.scanIndex;
+            //imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
+
+
+
+        
+        
         Debug.Log("scanIndex is " + scanIndex);
         haveNewMessage = true;
         jiangeTime = Time.time - countStartTime;
         //Debug.Log("接收消息处理时间为：" + jiangeTime.ToString("F2"));
     }
+    /*
+    private void ReadIRImage(NetworkInMessage msg) {
+        if (onlyGetTemperature) {
+            temperature = CustomMessagesIRImage.ReadTemperature(msg);
+        }
+        else if (enableLinescan) {
+            imageData = CustomMessagesIRImage.ReadIRImageByLinescan(msg);
+            scanIndex = CustomMessagesIRImage.scanIndex;
+        }        
+        else{
+            imageData = CustomMessagesIRImage.ReadIRImageAndTemperature(msg);
+            temperature = CustomMessagesIRImage.temperature;
+        }
 
+    }
+    */
     private void OnCubePositionReceived(NetworkInMessage msg)
     {
         if (!isMoving)
@@ -124,8 +175,12 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
         if (haveNewMessage)
         {
             haveNewMessage = false;
-            myTextMesh.text = (counter++).ToString();
+            
             UpdataTexture();
+
+            //myTextMesh.text = (counter++).ToString();
+            
+
         }
         
 
@@ -146,18 +201,38 @@ public class GetIRImage : MonoBehaviour, IInputClickHandler
 
     private void LoadDataToTexture()
     {
-        tex.LoadImage(imageData);
-        //tex.LoadRawTextureData(imageData);
 
-        Debug.Log("image loaded");
+        if (onlyGetTemperature)
+        {
+            myTextMesh.text = temperature.ToString() + "*C";
+        }
+        else
+        {
+            tex.LoadImage(imageData);
+            //tex.LoadRawTextureData(imageData);
 
-        tex.Apply();
-        mat.SetTexture("_MainTex", tex);
+            
+
+            Debug.Log("image loaded");
+
+            tex.Apply();
+            mat.SetTexture("_MainTex", tex);
+
+            if (enableLinescan)
+            {
+                Vector3 calculatedPos = new Vector3(0, 0.60f + scanIndex * (-1.16f / 94), 5);
+                //this.gameObject.transform.position = calculatedPos;
+                this.gameObject.transform.localPosition = calculatedPos;
+                myTextMesh.text = scanIndex.ToString();
+            }
+            else {
+                myTextMesh.text = temperature.ToString() + "*C"; ;
+            }
+        }
+
         
-
         
-            Vector3 calculatedPos = new Vector3(0, 0.60f + scanIndex*(-1.16f / 94), 5);
-            this.gameObject.transform.position = calculatedPos;
+            
 
 
 

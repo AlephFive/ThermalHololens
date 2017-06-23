@@ -1,185 +1,175 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
 using HoloToolkit.Sharing;
 using HoloToolkit.Unity;
+
+
 using System;
 
-public class CustomMessagesIRImage : Singleton<CustomMessagesIRImage>
-{
-    NetworkConnection serverConnection;
 
-    NetworkConnectionAdapter connectionAdapter;
-    
-    // need custom
-    public enum CustomMessageID : byte
+
+    public class CustomMessagesIRImage : Singleton<CustomMessagesIRImage>
     {
-        CubePostion = MessageID.UserMessageIDStart,
-        IRImage = MessageID.UserMessageIDStart + 1,
-        Max
-    }
+        NetworkConnection serverConnection;
 
+        NetworkConnectionAdapter connectionAdapter;
+
+
+        // need custom
+        public enum CustomMessageID : byte
+        {
+            CubePostion = MessageID.UserMessageIDStart,
+            IRImage = MessageID.UserMessageIDStart + 1,
+            Max
+        }
+        
+        
 
 
     public delegate void MessageCallback(NetworkInMessage msg);
 
-    public Dictionary<CustomMessageID, MessageCallback> MessageHandlers { get; private set; }
+        public Dictionary<CustomMessageID, MessageCallback> MessageHandlers { get; private set; }
 
-    public long LocalUserID { get; private set; }
+        public long LocalUserID { get; private set; }
 
-    protected override void Awake()
-    {
-        base.Awake();
-
-        MessageHandlers = new Dictionary<CustomMessageID, MessageCallback>();
-        for (byte index = (byte)MessageID.UserMessageIDStart; index < (byte)CustomMessageID.Max; index++)
+        protected override void Awake()
         {
-            if (!MessageHandlers.ContainsKey((CustomMessageID)index))
+            base.Awake();
+
+            MessageHandlers = new Dictionary<CustomMessageID, MessageCallback>();
+            for (byte index = (byte)MessageID.UserMessageIDStart; index < (byte)CustomMessageID.Max; index++)
             {
-                MessageHandlers.Add((CustomMessageID)index, null);
+                if (!MessageHandlers.ContainsKey((CustomMessageID)index))
+                {
+                    MessageHandlers.Add((CustomMessageID)index, null);
+                }
             }
         }
-    }
 
-    // Use this for initialization
-    void Start()
-    {
-        // 在 SharingManagerConnected 里增加
-        SharingStage.Instance.SharingManagerConnected += Instance_SharingManagerConnected;
-    }
-
-    private void Instance_SharingManagerConnected(object sender, EventArgs e)
-    {
-        InitializeMessageHandlers();
-    }
-
-    private void InitializeMessageHandlers()
-    {
-        SharingStage sharingStage = SharingStage.Instance;
-
-        if (sharingStage == null)
+        // Use this for initialization
+        void Start()
         {
-            return;
+            // 在 SharingManagerConnected 里增加
+            SharingStage.Instance.SharingManagerConnected += Instance_SharingManagerConnected;
         }
 
-        serverConnection = sharingStage.Manager.GetServerConnection();
-        if (serverConnection == null)
+        private void Instance_SharingManagerConnected(object sender, EventArgs e)
         {
-            return;
+            InitializeMessageHandlers();
         }
 
-        connectionAdapter = new NetworkConnectionAdapter();
-        connectionAdapter.MessageReceivedCallback += ConnectionAdapter_MessageReceivedCallback;
-
-        LocalUserID = sharingStage.Manager.GetLocalUser().GetID();
-
-        // 根据每一个customeMessageID 添加监听器
-        for (byte index = (byte)MessageID.UserMessageIDStart; index < (byte)CustomMessageID.Max; ++index)
+        private void InitializeMessageHandlers()
         {
-            serverConnection.AddListener(index, connectionAdapter);
-        }
-    }
+            SharingStage sharingStage = SharingStage.Instance;
 
-    private void ConnectionAdapter_MessageReceivedCallback(NetworkConnection connection, NetworkInMessage msg)
-    {
-        byte messageType = msg.ReadByte();
-        // 在字典里查询这个messageType
-        MessageCallback messageHandler = MessageHandlers[(CustomMessageID)messageType]; //?????
-        if (messageHandler != null)
-        {
-            // 用对应类型的messageHandler（MessageCallback）处理这个msg
-            messageHandler(msg);
-        }
-    }
+            if (sharingStage == null)
+            {
+                return;
+            }
 
-    protected override void OnDestroy()
-    {
-        if (serverConnection != null)
-        {
+            serverConnection = sharingStage.Manager.GetServerConnection();
+            if (serverConnection == null)
+            {
+                return;
+            }
+
+            connectionAdapter = new NetworkConnectionAdapter();
+            connectionAdapter.MessageReceivedCallback += ConnectionAdapter_MessageReceivedCallback;
+
+            LocalUserID = sharingStage.Manager.GetLocalUser().GetID();
+
+            // 根据每一个customeMessageID 添加监听器
             for (byte index = (byte)MessageID.UserMessageIDStart; index < (byte)CustomMessageID.Max; ++index)
             {
-                serverConnection.RemoveListener(index, connectionAdapter);
+                serverConnection.AddListener(index, connectionAdapter);
             }
-            connectionAdapter.MessageReceivedCallback -= ConnectionAdapter_MessageReceivedCallback;
         }
-        base.OnDestroy();
-    }
-    
-    /// <summary>
-    /// 第一位是message Type
-    /// 第二位是LocalUserID
-    /// 这个不用改，所有的消息都是这样的
-    /// </summary>
-    /// <param name="messageType"></param>
-    /// <returns></returns>
-    private NetworkOutMessage CreateMessage(byte messageType)
-    {
-        NetworkOutMessage msg = serverConnection.CreateMessage(messageType);
-        msg.Write(messageType);
-        msg.Write(LocalUserID);
-        return msg; 
-    }
 
-    /// <summary>
-    /// 广播cube的message
-    /// </summary>
-    /// <param name="positon"></param>
-    public void SendCubePosition(Vector3 positon)
-    {
-        if (serverConnection != null && serverConnection.IsConnected())
+        private void ConnectionAdapter_MessageReceivedCallback(NetworkConnection connection, NetworkInMessage msg)
         {
-            NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.CubePostion);
-
-            msg.Write(positon.x);
-            msg.Write(positon.y);
-            msg.Write(positon.z);
-
-            serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.ReliableOrdered, MessageChannel.Default);
-        }
-    }
-
-    /// <summary>
-    /// 发送image的array
-    /// </summary>
-    /// <param name="imageBytes"></param>
-    public void SendIRImage(byte[] imageBytes)
-    {
-        if (serverConnection != null && serverConnection .IsConnected())
-        {
-            NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
-
-            msg.Write(imageBytes.Length);
-
-            for (int i = 0; i < imageBytes.Length; i++)
+            byte messageType = msg.ReadByte();
+            // 在字典里查询这个messageType
+            MessageCallback messageHandler = MessageHandlers[(CustomMessageID)messageType]; //?????
+            if (messageHandler != null)
             {
-                msg.Write(imageBytes[i]);
+                // 用对应类型的messageHandler（MessageCallback）处理这个msg
+                messageHandler(msg);
+            }
+        }
+
+        protected override void OnDestroy()
+        {
+            if (serverConnection != null)
+            {
+                for (byte index = (byte)MessageID.UserMessageIDStart; index < (byte)CustomMessageID.Max; ++index)
+                {
+                    serverConnection.RemoveListener(index, connectionAdapter);
+                }
+                connectionAdapter.MessageReceivedCallback -= ConnectionAdapter_MessageReceivedCallback;
+            }
+            base.OnDestroy();
+        }
+
+        /// <summary>
+        /// 第一位是message Type
+        /// 第二位是LocalUserID
+        /// 这个不用改，所有的消息都是这样的
+        /// </summary>
+        /// <param name="messageType"></param>
+        /// <returns></returns>
+        private NetworkOutMessage CreateMessage(byte messageType)
+        {
+            NetworkOutMessage msg = serverConnection.CreateMessage(messageType);
+            msg.Write(messageType);
+            msg.Write(LocalUserID);
+            return msg;
+        }
+
+        /// <summary>
+        /// 广播cube的message
+        /// </summary>
+        /// <param name="positon"></param>
+        /// 
+
+
+        public void SendCubePosition(Vector3 positon)
+        {
+            if (serverConnection != null && serverConnection.IsConnected())
+            {
+                NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.CubePostion);
+
+                msg.Write(positon.x);
+                msg.Write(positon.y);
+                msg.Write(positon.z);
+
+                serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.ReliableOrdered, MessageChannel.Default);
             }
 
-            serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.UnreliableSequenced, MessageChannel.Default);
+
+        }
+
+    public void SendTempTarget(float temp) {
+        
+        if (serverConnection != null && serverConnection.IsConnected())
+        {
+            
+            NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
+
+            msg.Write(temp);
+            Debug.Log("sending temp");
+
+            serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.ReliableOrdered, MessageChannel.Default);
         }
     }
 
-    public void SendIRImageByString(byte[] imageBytes)
-    {
+    public void SendTempTargetWithImage(byte[] imageBytes, float temp) {
         if (serverConnection != null && serverConnection.IsConnected())
         {
             NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
 
-            msg.Write(imageBytes.Length);
-
-            XString tempString = new XString(System.Text.Encoding.UTF8.GetString(imageBytes));
-
-            msg.Write(tempString);
-
-            serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.UnreliableSequenced, MessageChannel.Default);
-        }
-    }
-
-    public void SendIRImageByArray(byte[] imageBytes)
-    {
-        if (serverConnection != null && serverConnection.IsConnected())
-        {
-            NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
+            msg.Write(temp);
 
             msg.Write(imageBytes.Length);
 
@@ -187,75 +177,138 @@ public class CustomMessagesIRImage : Singleton<CustomMessagesIRImage>
 
             serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.ReliableOrdered, MessageChannel.Default);
         }
+
     }
 
-    public void SendIRImageByLinescan(byte[] imageBytes, Int32 scanIndex)
-    {
-        if (serverConnection != null && serverConnection.IsConnected())
+        /// <summary>
+        /// 发送image的array
+        /// </summary>
+        /// <param name="imageBytes"></param>
+        public void SendIRImage(byte[] imageBytes)
         {
-            NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
+            if (serverConnection != null && serverConnection.IsConnected())
+            {
+                NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
 
-            //send the current scan index
-            msg.Write(scanIndex);
+                msg.Write(imageBytes.Length);
 
-            //send length data
-            msg.Write(imageBytes.Length);
+                for (int i = 0; i < imageBytes.Length; i++)
+                {
+                    msg.Write(imageBytes[i]);
+                }
 
-            Debug.Log("sent bytes: " + imageBytes.Length);
-            //send image
-            msg.WriteArray(imageBytes, Convert.ToUInt32(imageBytes.Length));
-
-            serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.ReliableOrdered, MessageChannel.Default);
+                serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.UnreliableSequenced, MessageChannel.Default);
+            }
         }
-    }
 
-    /// <summary>
-    /// 读取 msg 里的bytes
-    /// </summary>
-    /// <param name="msg"></param>
-    /// <returns></returns>
-    public static byte[] ReadIRImage(NetworkInMessage msg)
-    {
-        byte[] tempImage;
-        int length = 0;
-        msg.ReadInt64();
-        length = msg.ReadInt32();
-        tempImage = new byte[length];
-        for (int i = 0; i < length; i++)
+        public void SendIRImageByString(byte[] imageBytes)
         {
-            tempImage[i] = msg.ReadByte();
+            if (serverConnection != null && serverConnection.IsConnected())
+            {
+                NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
+
+                msg.Write(imageBytes.Length);
+
+                XString tempString = new XString(System.Text.Encoding.UTF8.GetString(imageBytes));
+
+                msg.Write(tempString);
+
+                serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.UnreliableSequenced, MessageChannel.Default);
+            }
         }
-        return tempImage;
-    }
 
-    public static byte[] ReadIRImageByString(NetworkInMessage msg)
-    {
-        byte[] tempImage;
-        msg.ReadInt64();
-        msg.ReadInt32();
+        public void SendIRImageByArray(byte[] imageBytes)
+        {
+            if (serverConnection != null && serverConnection.IsConnected())
+            {
+                NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
 
-        tempImage = System.Convert.FromBase64String(msg.ReadString());
+                msg.Write(imageBytes.Length);
 
-        return tempImage;
-    }
+                msg.WriteArray(imageBytes, Convert.ToUInt32(imageBytes.Length));
 
-    public static byte[] ReadIRImageByArray(NetworkInMessage msg)
-    {
-        byte[] tempImage;
-        int length = 0;
-        msg.ReadInt64();
-        length = msg.ReadInt32();
-        tempImage = new byte[length];
+                serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.ReliableOrdered, MessageChannel.Default);
+            }
+        }
 
-        msg.ReadArray(tempImage, Convert.ToUInt32(length));
+        public void SendIRImageByLinescan(byte[] imageBytes, Int32 scanIndex)
+        {
+            if (serverConnection != null && serverConnection.IsConnected())
+            {
+                NetworkOutMessage msg = CreateMessage((byte)CustomMessageID.IRImage);
 
-        return tempImage;
-    }
+                //send the current scan index
+                msg.Write(scanIndex);
 
-    public static Vector3 ReadCubePostion(NetworkInMessage msg)
-    {
-        msg.ReadInt64();
+                //send length data
+                msg.Write(imageBytes.Length);
 
-        return new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
-    }
+                Debug.Log("sent bytes: " + imageBytes.Length);
+                //send image
+                msg.WriteArray(imageBytes, Convert.ToUInt32(imageBytes.Length));
+
+                serverConnection.Broadcast(msg, MessagePriority.Immediate, MessageReliability.ReliableOrdered, MessageChannel.Default);
+            }
+        }
+
+        /// <summary>
+        /// 读取 msg 里的bytes
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <returns></returns>
+        public static byte[] ReadIRImage(NetworkInMessage msg)
+        {
+            byte[] tempImage;
+            int length = 0;
+            msg.ReadInt64();
+            length = msg.ReadInt32();
+            tempImage = new byte[length];
+            for (int i = 0; i < length; i++)
+            {
+                tempImage[i] = msg.ReadByte();
+            }
+            return tempImage;
+        }
+
+        public static byte[] ReadIRImageByString(NetworkInMessage msg)
+        {
+            byte[] tempImage;
+            msg.ReadInt64();
+            msg.ReadInt32();
+
+            tempImage = System.Convert.FromBase64String(msg.ReadString());
+
+            return tempImage;
+        }
+
+        public static byte[] ReadIRImageByArray(NetworkInMessage msg)
+        {
+            byte[] tempImage;
+            int length = 0;
+            msg.ReadInt64();
+            length = msg.ReadInt32();
+            tempImage = new byte[length];
+
+            msg.ReadArray(tempImage, Convert.ToUInt32(length));
+
+            return tempImage;
+        }
+
+        public static Vector3 ReadCubePostion(NetworkInMessage msg)
+        {
+            msg.ReadInt64();
+
+            return new Vector3(msg.ReadFloat(), msg.ReadFloat(), msg.ReadFloat());
+        }
+
+
+
+
+
+    
+
+
+
+
+
 }

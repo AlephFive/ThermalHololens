@@ -262,6 +262,40 @@ public class CustomMessagesIRImage : Singleton<CustomMessagesIRImage>
     }
 
 
+    public static float temperature;
+
+    public static byte[] ReadIRImageAndTemperature(NetworkInMessage msg)
+    {
+        byte[] tempImage;
+        int length = 0;
+        
+        msg.ReadInt64();
+
+        temperature = msg.ReadFloat();
+
+        length = msg.ReadInt32();
+
+        tempImage = new byte[length];
+
+        msg.ReadArray(tempImage, Convert.ToUInt16(length));
+
+        return tempImage;
+    }
+
+    public static float ReadTemperature(NetworkInMessage msg)
+    {
+        
+        msg.ReadInt64();
+
+        temperature = msg.ReadFloat();
+
+        return temperature;
+    }
+
+
+
+
+
 
 #if HASTASKS
     private static async Task<byte[]> ReadIRImageByLinescanAsync(NetworkInMessage msg) {

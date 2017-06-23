@@ -322,13 +322,6 @@
     <Compile Include="Assets\Scripts\GetIRImageToUIImage.cs" />
     <Compile Include="Assets\Scripts\SendIRImage.cs" />
     <Compile Include="Assets\U3D\AggregateException.cs" />
-    <Compile Include="Assets\U3D\Threading\Dispatcher.cs" />
-    <Compile Include="Assets\U3D\Threading\Tasks\Task.cs" />
-    <Compile Include="Assets\U3D\Threading\Tasks\TaskCompletionSource.cs" />
-    <Compile Include="Assets\U3D\Threading\Tasks\Task_TResult.cs" />
-    <Compile Include="Assets\U3D\Threading\example\BasicTests.cs" />
-    <Compile Include="Assets\U3D\Threading\example\Examples.cs" />
-    <Compile Include="Assets\U3D\Threading\example\LeaderboardTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\HoloToolkit\Input\Shaders\Cursor.shader" />

@@ -320,6 +320,7 @@
     <Compile Include="Assets\Scripts\CustomMessages240.cs" />
     <Compile Include="Assets\Scripts\CustomMessagesIRImage.cs" />
     <Compile Include="Assets\Scripts\GetIRImage.cs" />
+    <Compile Include="Assets\Scripts\IPC2.cs" />
     <Compile Include="Assets\Scripts\SendIRImage.cs" />
   </ItemGroup>
   <ItemGroup>
