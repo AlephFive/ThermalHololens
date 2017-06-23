@@ -286,6 +286,7 @@
      <Compile Include="Assets\Scripts\GetIRImage.cs" />
      <Compile Include="Assets\Scripts\GetIRImageToUIImage.cs" />
      <Compile Include="Assets\Scripts\SendIRImage.cs" />
+     <Compile Include="Assets\U3D\AggregateException.cs" />
      <None Include="Assets\HoloToolkit\Utilities\Shaders\UnlitConfigurable.shader" />
      <None Include="Assets\HoloToolkit\SpatialUnderstanding\Materials\SpatialUnderstandingSurface.shader" />
      <None Include="Assets\HoloToolkit\SpatialMapping\Shaders\SpatialMappingTap.shader" />
