@@ -14,9 +14,11 @@ using System.IO;
 /// </summary>
 public class SendIRImage : MonoBehaviour
 {
-    float timeGap = 0.35f;
+    float timeGapForSend = 0.25f;
+    float timeGapForReceive = 1f / 64f;
     float lastTime;
     float lastTime2;
+    float lastTime3;
 
 
     int scanIndex = 42;
@@ -54,7 +56,7 @@ public class SendIRImage : MonoBehaviour
     /// <summary>
     /// function enable/disable
     /// </summary>
-    bool enableAlternateOpacity = true;
+    bool enableAlternateOpacity = false;
     bool enableThreshholdImage = true;
     bool enableScanline = false;
     bool enableOnlySendTemp = false;
@@ -158,7 +160,7 @@ public class SendIRImage : MonoBehaviour
             numImagesSent = 0;
         }
 
-        if (Time.time - lastTime > timeGap)
+        if (Time.time - lastTime > timeGapForReceive)
         //if (true)
         {
             lastTime = Time.time;
@@ -196,6 +198,15 @@ public class SendIRImage : MonoBehaviour
             }
             //Debug.Log("Just sent a image");
 
+            
+
+
+
+        }
+
+        if (Time.time - lastTime3 > timeGapForSend) {
+            lastTime3 = Time.time;
+
             if (enableOnlySendTemp)
             {
                 myMessage.SendTempTarget(temperature);
@@ -232,14 +243,10 @@ public class SendIRImage : MonoBehaviour
                 myMessage.SendTempTargetWithImage(imgData, temperature);
                 Debug.Log("sent packet size (in bytes): " + imgData.Length);
             }
-
-
-
         }
 
-        
 
-        
+
 
     }
 
